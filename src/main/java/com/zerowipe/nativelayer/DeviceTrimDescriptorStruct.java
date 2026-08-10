@@ -15,7 +15,7 @@ import java.util.List;
  * } DEVICE_TRIM_DESCRIPTOR;  // sizeof = 12 (padded to 4-byte alignment)
  * </pre>
  */
-final class DeviceTrimDescriptorStruct extends Structure {
+public final class DeviceTrimDescriptorStruct extends Structure {
 
     public int version;
     public int size;

@@ -15,7 +15,7 @@ import java.util.List;
  * } DEVICE_SEEK_PENALTY_DESCRIPTOR;  // sizeof = 12 (padded to 4-byte alignment)
  * </pre>
  */
-final class DeviceSeekPenaltyDescriptorStruct extends Structure {
+public final class DeviceSeekPenaltyDescriptorStruct extends Structure {
 
     public int version;
     public int size;

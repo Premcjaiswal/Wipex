@@ -32,7 +32,7 @@ import java.util.List;
  * } STORAGE_ADAPTER_DESCRIPTOR;        // sizeof = 32
  * </pre>
  */
-final class StorageAdapterDescriptorStruct extends Structure {
+public final class StorageAdapterDescriptorStruct extends Structure {
 
     public int version;
     public int size;

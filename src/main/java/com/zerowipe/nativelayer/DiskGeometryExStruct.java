@@ -34,7 +34,7 @@ import java.util.List;
  * structure directly from that buffer's {@link Pointer} - only the first
  * 32 bytes are ever read into Java fields.
  */
-final class DiskGeometryExStruct extends Structure {
+public final class DiskGeometryExStruct extends Structure {
 
     public long cylinders;
     public int mediaType;

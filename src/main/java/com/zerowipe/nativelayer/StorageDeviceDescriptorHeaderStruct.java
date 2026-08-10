@@ -39,7 +39,7 @@ import java.util.List;
  * than allocating its own memory) specifically so those offsets can be
  * resolved against the same buffer afterward.
  */
-final class StorageDeviceDescriptorHeaderStruct extends Structure {
+public final class StorageDeviceDescriptorHeaderStruct extends Structure {
 
     public int version;
     public int size;

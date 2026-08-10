@@ -20,7 +20,7 @@ import java.util.List;
  * array member - the extra padding is harmless and keeps the struct
  * naturally 4-byte aligned.
  */
-final class StoragePropertyQueryStruct extends Structure {
+public final class StoragePropertyQueryStruct extends Structure {
 
     public int propertyId;
     public int queryType;
