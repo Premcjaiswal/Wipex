@@ -1,0 +1,35 @@
+# Maven
+target/
+
+# Java
+*.class
+*.log
+hs_err_pid*
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Angular / Node (src/main/frontend)
+src/main/frontend/node_modules/
+src/main/frontend/.angular/
+src/main/frontend/dist/
+src/main/frontend/npm-debug.log*
+
+# Angular build output copied into Spring Boot static resources
+src/main/resources/static/
+
+# frontend-maven-plugin downloaded toolchain
+/node/
+/node_modules/
+
+# ZeroWipe runtime data (SQLite DB, generated reports)
+.zerowipe/
