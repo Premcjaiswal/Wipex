@@ -1,4 +1,4 @@
-package com.zerowipe.job;
+package com.zerowipe.sanitize;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

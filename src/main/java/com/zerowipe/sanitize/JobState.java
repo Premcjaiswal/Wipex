@@ -1,4 +1,4 @@
-package com.zerowipe.job;
+package com.zerowipe.sanitize;
 
 /**
  * States in the sanitization job state machine.

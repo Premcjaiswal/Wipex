@@ -1,4 +1,4 @@
-package com.zerowipe.verification;
+package com.zerowipe.verify;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

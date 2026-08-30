@@ -1,6 +1,5 @@
-package com.zerowipe.job;
+package com.zerowipe.sanitize;
 
-import com.zerowipe.policy.SanitizationMethod;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -31,7 +30,7 @@ public class SanitizationJob {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private SanitizationMethod method;
+    private EraseMethod method;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -71,7 +70,7 @@ public class SanitizationJob {
 
     public SanitizationJob(
             String deviceSnapshotJson,
-            SanitizationMethod method,
+            EraseMethod method,
             SanitizationMode mode,
             JobState state,
             long totalBytes,
@@ -94,7 +93,7 @@ public class SanitizationJob {
         return deviceSnapshotJson;
     }
 
-    public SanitizationMethod getMethod() {
+    public EraseMethod getMethod() {
         return method;
     }
 

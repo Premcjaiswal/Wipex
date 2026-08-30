@@ -1,4 +1,4 @@
-package com.zerowipe.verification;
+package com.zerowipe.verify;
 
 /**
  * How a verification pass read back the sanitized device.

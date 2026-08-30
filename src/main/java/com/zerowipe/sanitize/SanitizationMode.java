@@ -1,4 +1,4 @@
-package com.zerowipe.job;
+package com.zerowipe.sanitize;
 
 /**
  * Whether a job performs real destructive writes or only simulates them.

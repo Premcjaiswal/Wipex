@@ -1,4 +1,4 @@
-package com.zerowipe.verification;
+package com.zerowipe.verify;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
