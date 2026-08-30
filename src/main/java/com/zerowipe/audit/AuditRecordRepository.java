@@ -1,0 +1,6 @@
+package com.zerowipe.audit;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface AuditRecordRepository extends JpaRepository<AuditRecord, Long> {
+}
