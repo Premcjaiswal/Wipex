@@ -15,8 +15,7 @@ import org.springframework.stereotype.Component;
 /**
  * Real {@link NativeDeviceGateway} implementation using JNA to call the
  * Windows storage IOCTLs directly. Read-only in this phase:
- * {@link #lockAndDismountVolumes(int)} and
- * {@link #writeSectors(int, long, byte[])} throw
+ * {@link #writeSectors(int, long, byte[])} throws
  * {@link UnsupportedOperationException}.
  *
  * <p>Every handle opened here is closed in a {@code finally} block, and
@@ -213,12 +212,6 @@ public class JnaNativeDeviceGateway implements NativeDeviceGateway {
         } finally {
             Kernel32.INSTANCE.CloseHandle(handle);
         }
-    }
-
-    @Override
-    public VolumeLockHandles lockAndDismountVolumes(int diskNumber) {
-        throw new UnsupportedOperationException(
-                "lockAndDismountVolumes is not implemented in this read-only phase");
     }
 
     @Override

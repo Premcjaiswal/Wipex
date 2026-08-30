@@ -17,8 +17,8 @@ import org.springframework.stereotype.Service;
 /**
  * Runs read-only PowerShell queries against the Windows storage cmdlets
  * and parses their JSON output. Used for the data the native IOCTL layer
- * cannot provide directly: SMART/media-type cross-check, health status,
- * wear percentage and power-on hours.
+ * cannot provide directly: media-type cross-check and system-disk
+ * resolution.
  *
  * <p>Uses its own dedicated, leniently-configured {@link ObjectMapper}
  * (case-insensitive property matching, since PowerShell's {@code
@@ -45,12 +45,6 @@ public class PowerShellQueryService {
         String output = runPowerShell(
                 "Get-PhysicalDisk | Select-Object DeviceId, MediaType, HealthStatus | ConvertTo-Json");
         return parseJsonArray(output, PhysicalDiskInfo.class);
-    }
-
-    public List<StorageReliabilityCounterInfo> queryReliabilityCounters() {
-        String output = runPowerShell(
-                "Get-StorageReliabilityCounter | Select-Object DeviceId, Wear, PowerOnHours | ConvertTo-Json");
-        return parseJsonArray(output, StorageReliabilityCounterInfo.class);
     }
 
     public List<Integer> queryDiskNumbersForDriveLetter(String driveLetter) {

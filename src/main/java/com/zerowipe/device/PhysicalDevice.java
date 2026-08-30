@@ -2,8 +2,7 @@ package com.zerowipe.device;
 
 /**
  * Identity and static properties of a physical storage device, as reported
- * by the Windows storage stack. Contains no capability or health data - see
- * {@link DeviceCapabilities} for that.
+ * by the Windows storage stack.
  */
 public record PhysicalDevice(
         int diskNumber,

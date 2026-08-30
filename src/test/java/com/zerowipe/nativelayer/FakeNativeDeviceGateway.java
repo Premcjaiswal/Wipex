@@ -109,11 +109,6 @@ public final class FakeNativeDeviceGateway implements NativeDeviceGateway {
     }
 
     @Override
-    public VolumeLockHandles lockAndDismountVolumes(int diskNumber) {
-        throw new UnsupportedOperationException("lockAndDismountVolumes is not implemented in this phase");
-    }
-
-    @Override
     public void writeSectors(int diskNumber, long offset, byte[] buffer) {
         throw new UnsupportedOperationException("writeSectors is not implemented in this phase");
     }

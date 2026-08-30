@@ -9,9 +9,8 @@ import java.util.List;
  * application unit-testable with {@code FakeNativeDeviceGateway}.
  *
  * <p>This phase implements read-only operations only.
- * {@link #lockAndDismountVolumes(int)} and
- * {@link #writeSectors(int, long, byte[])} are declared for interface
- * completeness (the future write-path phase) but throw
+ * {@link #writeSectors(int, long, byte[])} is declared for interface
+ * completeness (the future write-path phase) but throws
  * {@link UnsupportedOperationException} for now.
  *
  * <p>{@link #queryVolumeDiskExtents(String)} is not part of the original
@@ -43,9 +42,6 @@ public interface NativeDeviceGateway {
      * @param volumePath a drive-letter volume identifier such as {@code "C:"}
      */
     List<Integer> queryVolumeDiskExtents(String volumePath);
-
-    /** Not implemented in this phase. */
-    VolumeLockHandles lockAndDismountVolumes(int diskNumber);
 
     /** Not implemented in this phase. */
     void writeSectors(int diskNumber, long offset, byte[] buffer);

@@ -53,16 +53,13 @@ class PowerShellQueryServiceTest {
     @Test
     void matchesPascalCasePowerShellFieldsToCamelCaseRecordComponents() {
         String json = """
-                {"DeviceId": 3, "Wear": 12, "PowerOnHours": 4500}
+                {"DiskNumber": 3}
                 """;
 
-        List<StorageReliabilityCounterInfo> counters =
-                service.parseJsonArray(json, StorageReliabilityCounterInfo.class);
+        List<PartitionInfo> partitions = service.parseJsonArray(json, PartitionInfo.class);
 
-        assertEquals(1, counters.size());
-        assertEquals(3, counters.get(0).deviceId());
-        assertEquals(12, counters.get(0).wear());
-        assertEquals(4500L, counters.get(0).powerOnHours());
+        assertEquals(1, partitions.size());
+        assertEquals(3, partitions.get(0).diskNumber());
     }
 
     @Test
