@@ -13,7 +13,6 @@ import com.zerowipe.device.BusType;
 import com.zerowipe.device.DeviceDiscoveryService;
 import com.zerowipe.device.MediaType;
 import com.zerowipe.device.PhysicalDevice;
-import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
@@ -223,6 +222,6 @@ class SafetyValidatorTest {
     }
 
     private static ZeroWipeProperties properties(boolean allowLiveMode) {
-        return new ZeroWipeProperties(allowLiveMode, "", "", List.of());
+        return new ZeroWipeProperties(allowLiveMode);
     }
 }

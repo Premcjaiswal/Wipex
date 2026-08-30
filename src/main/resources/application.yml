@@ -1,5 +1,6 @@
 server:
   address: 127.0.0.1
+  port: 8088
 
 spring:
   datasource:
@@ -13,6 +14,3 @@ spring:
 
 zerowipe:
   allow-live-mode: false
-  operator-name: ""
-  organization: ""
-  test-disk-allowlist: []
