@@ -3,21 +3,16 @@ package com.zerowipe.device;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.zerowipe.nativelayer.FakeNativeDeviceGateway;
-import com.zerowipe.nativelayer.NativeAccessException;
-import com.zerowipe.nativelayer.NativeDeviceGateway;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class SystemDiskResolverTest {
 
-    private final FakeNativeDeviceGateway gateway = new FakeNativeDeviceGateway();
     private final PowerShellQueryService powerShell = mock(PowerShellQueryService.class);
-    private final SystemDiskResolver resolver = new SystemDiskResolver(gateway, powerShell);
+    private final SystemDiskResolver resolver = new SystemDiskResolver(powerShell);
 
     @Test
     void parsesDriveLetterFromATypicalSystemRoot() {
@@ -40,18 +35,17 @@ class SystemDiskResolverTest {
     }
 
     @Test
-    void usesNativeVolumeDiskExtentsWhenAvailable() {
-        gateway.withVolumeDiskExtents("C:", List.of(0));
+    void resolvesTheSystemDiskFromPowerShell() {
+        when(powerShell.queryDiskNumbersForDriveLetter("C")).thenReturn(List.of(0));
 
         Set<Integer> result = resolver.resolveForDriveLetter("C:");
 
         assertEquals(Set.of(0), result);
-        verifyNoInteractions(powerShell);
     }
 
     @Test
     void marksEveryDiskASpannedSystemVolumeTouches() {
-        gateway.withVolumeDiskExtents("C:", List.of(0, 1));
+        when(powerShell.queryDiskNumbersForDriveLetter("C")).thenReturn(List.of(0, 1));
 
         Set<Integer> result = resolver.resolveForDriveLetter("C:");
 
@@ -59,29 +53,7 @@ class SystemDiskResolverTest {
     }
 
     @Test
-    void fallsBackToPowerShellWhenNativeCallReturnsNoExtents() {
-        // No fake extents registered for "C:" -> FakeNativeDeviceGateway returns List.of()
-        when(powerShell.queryDiskNumbersForDriveLetter("C")).thenReturn(List.of(2));
-
-        Set<Integer> result = resolver.resolveForDriveLetter("C:");
-
-        assertEquals(Set.of(2), result);
-    }
-
-    @Test
-    void fallsBackToPowerShellWhenNativeCallThrows() {
-        NativeDeviceGateway throwingGateway = mock(NativeDeviceGateway.class);
-        when(throwingGateway.queryVolumeDiskExtents("C:")).thenThrow(new NativeAccessException("simulated failure", 5));
-        SystemDiskResolver resolverWithThrowingGateway = new SystemDiskResolver(throwingGateway, powerShell);
-        when(powerShell.queryDiskNumbersForDriveLetter("C")).thenReturn(List.of(0));
-
-        Set<Integer> result = resolverWithThrowingGateway.resolveForDriveLetter("C:");
-
-        assertEquals(Set.of(0), result);
-    }
-
-    @Test
-    void returnsEmptySetWhenNeitherSourceHasAnAnswer() {
+    void returnsEmptySetWhenPowerShellHasNoAnswer() {
         when(powerShell.queryDiskNumbersForDriveLetter("C")).thenReturn(List.of());
 
         Set<Integer> result = resolver.resolveForDriveLetter("C:");
@@ -91,7 +63,6 @@ class SystemDiskResolverTest {
 
     @Test
     void systemDiskNumbersCachesTheResultAcrossCalls() {
-        gateway.withVolumeDiskExtents("C:", List.of(0));
         // With no SystemRoot env var set in this test environment,
         // systemDiskNumbers() takes the "could not determine drive letter"
         // path both times - this test only asserts the two calls return the

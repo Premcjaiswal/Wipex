@@ -6,12 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.zerowipe.nativelayer.AdapterDescriptor;
-import com.zerowipe.nativelayer.DeviceDescriptor;
-import com.zerowipe.nativelayer.DriveGeometry;
-import com.zerowipe.nativelayer.FakeNativeDeviceGateway;
-import com.zerowipe.nativelayer.SeekPenaltyInfo;
-import com.zerowipe.nativelayer.StorageBusTypeValues;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -19,20 +13,16 @@ import org.junit.jupiter.api.Test;
 
 class DeviceDiscoveryServiceTest {
 
-    private final FakeNativeDeviceGateway gateway = new FakeNativeDeviceGateway();
     private final PowerShellQueryService powerShell = mock(PowerShellQueryService.class);
     private final SystemDiskResolver systemDiskResolver = mock(SystemDiskResolver.class);
-    private final DeviceDiscoveryService service = new DeviceDiscoveryService(gateway, powerShell, systemDiskResolver);
+    private final DeviceDiscoveryService service = new DeviceDiscoveryService(powerShell, systemDiskResolver);
 
     @Test
-    void buildsAPhysicalDeviceFromDescriptorAndGeometry() {
-        gateway.withDeviceDescriptor(
-                0, new DeviceDescriptor(0, "ACME", "FastDrive 9000", "1.0", "SN123", 11, false));
-        gateway.withGeometry(0, new DriveGeometry(0, 1000, 255, 63, 512, 500_000_000_000L));
-        gateway.withAdapterDescriptor(0, adapter(0, StorageBusTypeValues.SATA));
-        gateway.withSeekPenalty(0, new SeekPenaltyInfo(0, true));
+    void buildsAPhysicalDeviceFromGetPhysicalDiskOutput() {
+        when(powerShell.queryPhysicalDisks())
+                .thenReturn(List.of(new PhysicalDiskInfo(
+                        0, "FastDrive 9000", "SN123", "1.0", "SATA", "HDD", 500_000_000_000L, 512)));
         when(systemDiskResolver.systemDiskNumbers()).thenReturn(Set.of());
-        when(powerShell.queryPhysicalDisks()).thenReturn(List.of());
 
         List<PhysicalDevice> devices = service.discoverDevices();
 
@@ -52,12 +42,9 @@ class DeviceDiscoveryServiceTest {
 
     @Test
     void marksTheDiskListedBySystemDiskResolverAsTheSystemDisk() {
-        gateway.withDeviceDescriptor(0, new DeviceDescriptor(0, "ACME", "Model", "1.0", "SN0", 11, false));
-        gateway.withGeometry(0, new DriveGeometry(0, 1, 1, 1, 512, 1024L));
-        gateway.withAdapterDescriptor(0, adapter(0, StorageBusTypeValues.SATA));
-        gateway.withSeekPenalty(0, new SeekPenaltyInfo(0, true));
+        when(powerShell.queryPhysicalDisks())
+                .thenReturn(List.of(new PhysicalDiskInfo(0, "Model", "SN0", "1.0", "SATA", "HDD", 1024L, 512)));
         when(systemDiskResolver.systemDiskNumbers()).thenReturn(Set.of(0));
-        when(powerShell.queryPhysicalDisks()).thenReturn(List.of());
 
         PhysicalDevice device = service.discoverDevices().get(0);
 
@@ -65,55 +52,34 @@ class DeviceDiscoveryServiceTest {
     }
 
     @Test
-    void skipsADiskThatFailsNativeQueriesRatherThanFailingTheWholeDiscovery() {
-        gateway.withDeviceDescriptor(0, new DeviceDescriptor(0, "ACME", "GoodDrive", "1.0", "SN0", 11, false));
-        gateway.withGeometry(0, new DriveGeometry(0, 1, 1, 1, 512, 1024L));
-        gateway.withAdapterDescriptor(0, adapter(0, StorageBusTypeValues.SATA));
-        gateway.withSeekPenalty(0, new SeekPenaltyInfo(0, true));
-        // Disk 1 has a descriptor registered but no geometry -> queryGeometry(1) throws.
-        gateway.withDeviceDescriptor(1, new DeviceDescriptor(1, "ACME", "BadDrive", "1.0", "SN1", 11, false));
+    void diskWithNullDeviceIdIsSkipped() {
+        when(powerShell.queryPhysicalDisks())
+                .thenReturn(List.of(new PhysicalDiskInfo(null, "Weird", "SN?", "1.0", "SATA", "HDD", 1024L, 512)));
         when(systemDiskResolver.systemDiskNumbers()).thenReturn(Set.of());
-        when(powerShell.queryPhysicalDisks()).thenReturn(List.of());
 
         List<PhysicalDevice> devices = service.discoverDevices();
 
-        assertEquals(1, devices.size());
-        assertEquals("GoodDrive", devices.get(0).model());
+        assertTrue(devices.isEmpty());
     }
 
     @Test
-    void discoverDeviceReturnsEmptyOptionalWhenTheDiskHasNoNativeData() {
+    void usbBusTypeIsTreatedAsRemovable() {
+        when(powerShell.queryPhysicalDisks())
+                .thenReturn(List.of(new PhysicalDiskInfo(0, "Model", "SN0", "1.0", "USB", "SSD", 2048L, 4096)));
         when(systemDiskResolver.systemDiskNumbers()).thenReturn(Set.of());
 
-        Optional<PhysicalDevice> result = service.discoverDevice(99);
+        PhysicalDevice device = service.discoverDevices().get(0);
 
-        assertTrue(result.isEmpty());
+        assertEquals(BusType.USB, device.busType());
+        assertTrue(device.isRemovable());
     }
 
     @Test
-    void discoverDeviceReturnsThePhysicalDeviceWhenNativeDataIsAvailable() {
-        gateway.withDeviceDescriptor(0, new DeviceDescriptor(0, "ACME", "Model", "1.0", "SN0", 11, true));
-        gateway.withGeometry(0, new DriveGeometry(0, 1, 1, 1, 4096, 2048L));
-        gateway.withAdapterDescriptor(0, adapter(0, StorageBusTypeValues.USB));
-        gateway.withSeekPenalty(0, new SeekPenaltyInfo(0, false));
-        when(systemDiskResolver.systemDiskNumbers()).thenReturn(Set.of());
-        when(powerShell.queryPhysicalDisks()).thenReturn(List.of());
-
-        Optional<PhysicalDevice> result = service.discoverDevice(0);
-
-        assertTrue(result.isPresent());
-        assertEquals(BusType.USB, result.get().busType());
-        assertEquals(MediaType.SSD, result.get().mediaType());
-        assertTrue(result.get().isRemovable());
-    }
-
-    @Test
-    void nvmeBusTypeSkipsTheSeekPenaltyCrossCheckEntirely() {
-        gateway.withDeviceDescriptor(0, new DeviceDescriptor(0, "ACME", "Model", "1.0", "SN0", 17, false));
-        gateway.withGeometry(0, new DriveGeometry(0, 1, 1, 1, 512, 1024L));
-        gateway.withAdapterDescriptor(0, adapter(0, StorageBusTypeValues.NVME));
-        // No fake seek-penalty registered for disk 0: if detectMediaType had
-        // queried it, FakeNativeDeviceGateway would throw NativeAccessException.
+    void nvmeBusTypeOverridesReportedMediaType() {
+        // Get-PhysicalDisk reports NVMe drives' MediaType as plain "SSD" -
+        // NVMe media type is derived from bus type, not the MediaType field.
+        when(powerShell.queryPhysicalDisks())
+                .thenReturn(List.of(new PhysicalDiskInfo(0, "Model", "SN0", "1.0", "NVMe", "SSD", 2048L, 512)));
         when(systemDiskResolver.systemDiskNumbers()).thenReturn(Set.of());
 
         PhysicalDevice device = service.discoverDevices().get(0);
@@ -122,7 +88,39 @@ class DeviceDiscoveryServiceTest {
         assertEquals(MediaType.NVME, device.mediaType());
     }
 
-    private static AdapterDescriptor adapter(int diskNumber, int busTypeRaw) {
-        return new AdapterDescriptor(diskNumber, busTypeRaw, 65536, 32, 0);
+    @Test
+    void unrecognisedMediaTypeMapsToUnknown() {
+        when(powerShell.queryPhysicalDisks())
+                .thenReturn(List.of(new PhysicalDiskInfo(0, "Model", "SN0", "1.0", "SATA", "Unspecified", 1024L, 512)));
+        when(systemDiskResolver.systemDiskNumbers()).thenReturn(Set.of());
+
+        PhysicalDevice device = service.discoverDevices().get(0);
+
+        assertEquals(MediaType.UNKNOWN, device.mediaType());
+    }
+
+    @Test
+    void discoverDeviceReturnsEmptyOptionalWhenNoMatchingDiskExists() {
+        when(powerShell.queryPhysicalDisks()).thenReturn(List.of());
+        when(systemDiskResolver.systemDiskNumbers()).thenReturn(Set.of());
+
+        Optional<PhysicalDevice> result = service.discoverDevice(99);
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void discoverDeviceReturnsTheMatchingDisk() {
+        when(powerShell.queryPhysicalDisks())
+                .thenReturn(List.of(
+                        new PhysicalDiskInfo(0, "First", "SN0", "1.0", "SATA", "HDD", 1024L, 512),
+                        new PhysicalDiskInfo(1, "Second", "SN1", "1.0", "USB", "SSD", 2048L, 4096)));
+        when(systemDiskResolver.systemDiskNumbers()).thenReturn(Set.of());
+
+        Optional<PhysicalDevice> result = service.discoverDevice(1);
+
+        assertTrue(result.isPresent());
+        assertEquals("Second", result.get().model());
+        assertEquals(BusType.USB, result.get().busType());
     }
 }

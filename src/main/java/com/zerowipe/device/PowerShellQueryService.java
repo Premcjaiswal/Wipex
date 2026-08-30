@@ -16,9 +16,9 @@ import org.springframework.stereotype.Service;
 
 /**
  * Runs read-only PowerShell queries against the Windows storage cmdlets
- * and parses their JSON output. Used for the data the native IOCTL layer
- * cannot provide directly: media-type cross-check and system-disk
- * resolution.
+ * and parses their JSON output. This is the sole source of device
+ * identity and system-disk resolution - there is no native IOCTL layer
+ * anymore.
  *
  * <p>Uses its own dedicated, leniently-configured {@link ObjectMapper}
  * (case-insensitive property matching, since PowerShell's {@code
@@ -42,8 +42,8 @@ public class PowerShellQueryService {
             .build();
 
     public List<PhysicalDiskInfo> queryPhysicalDisks() {
-        String output = runPowerShell(
-                "Get-PhysicalDisk | Select-Object DeviceId, MediaType, HealthStatus | ConvertTo-Json");
+        String output = runPowerShell("Get-PhysicalDisk | Select-Object DeviceId, FriendlyName, SerialNumber, "
+                + "FirmwareVersion, BusType, MediaType, Size, LogicalSectorSize | ConvertTo-Json");
         return parseJsonArray(output, PhysicalDiskInfo.class);
     }
 
